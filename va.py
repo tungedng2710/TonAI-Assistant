@@ -1,7 +1,7 @@
 import re
 import torch
 import warnings
-from transformers import AutoTokenizer, AutoModelForCausalLM
+from transformers import AutoTokenizer, AutoModelForCausalLM, BitsAndBytesConfig
 
 import functions
 from functions import *
@@ -15,25 +15,21 @@ def get_function_info(answer: str = ""):
     if match:
         functioncall_string = match.group(1).strip()
         functioncall_string = functioncall_string.replace("'", '')
-
-        # Convert string to dictionary
         dictionary = json.loads(functioncall_string)
-
-        # # If the 'arguments' field is also a string representing a dictionary, convert it too
-        # dictionary['arguments'] = json.loads(dictionary['arguments'])
-
         return dictionary
     else:
         return
 
 
 def complete(model, tokenizer, messages, max_new_tokens=1024):
+    """
+    Generate text with LLMs
+    """
     input_ids = tokenizer.apply_chat_template(
         messages,
         add_generation_prompt=True,
         return_tensors="pt"
     ).to(model.device)
-
     terminators = [
         tokenizer.eos_token_id,
         tokenizer.convert_tokens_to_ids("<|eot_id|>")
@@ -54,9 +50,17 @@ def complete(model, tokenizer, messages, max_new_tokens=1024):
 if __name__ == "__main__":
     model_id = "hiieu/Meta-Llama-3-8B-Instruct-function-calling-json-mode"
     tokenizer = AutoTokenizer.from_pretrained(model_id)
+    bnb_config = BitsAndBytesConfig(
+        load_in_4bit=True,
+        bnb_4bit_use_double_quant=True,
+        bnb_4bit_quant_type="nf4",
+        bnb_4bit_compute_dtype=torch.bfloat16
+    )
     model = AutoModelForCausalLM.from_pretrained(
         model_id,
         device_map="auto",
+        quantization_config=bnb_config,
+        torch_dtype=torch.bfloat16
     )
     functions_metadata = FUNCTIONS_METADATA
 
