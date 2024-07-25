@@ -1,4 +1,5 @@
 import os
+import random
 import torch
 from diffusers import StableDiffusionPipeline
 from utils.utils import save_image
@@ -30,7 +31,9 @@ def book_flight_ticket(start_location: str = "",
 
 
 def generate_image(prompt: str = ""):
+    seed = random.randint(0, 999999)
     device = torch.device(f"cuda:0")
+    generator = torch.Generator(device).manual_seed(seed)
     if len(prompt) == 0:
         prompt = input(
             "TonAI Assistant: Tell me what do you want to generate: ")
@@ -44,6 +47,7 @@ def generate_image(prompt: str = ""):
                          width=512,
                          height=512,
                          num_inference_steps=20,
+                         generator=generator,
                          guidance_scale=2).images[0]
         image_path = save_image(image)
         return image, image_path, response_types[1]

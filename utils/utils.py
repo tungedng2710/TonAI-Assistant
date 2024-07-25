@@ -51,8 +51,7 @@ SYSTEM_PROMPT = f"""You are the virtual assistant of TonAI with access to the fo
 {str(FUNCTIONS_METADATA)}\n\nTo use these functions respond with:
 <functioncall> {{ "name": "function_name", "arguments": {{ "arg_1": "value_1", "arg_1": "value_1", ... }} }} </functioncall>
 Edge cases you must handle:
-- If there are no functions that match the user request, you will respond politely that you cannot help.
-- For any parameters you don't understand clearly, please return None
+- If there are no functions that match the user request, you will respond user's question directly.
 """
 
 

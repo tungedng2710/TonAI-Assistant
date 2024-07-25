@@ -56,12 +56,17 @@ The virtual assistant is in the progress of development, you can try it with lim
     pip install -r requirement.txt
     ```
 
-## Run the Virtual Assistant
+## Run your Virtual Assistant
+To run the Telegram bot from your Terminal:
+```
+python3 telegrambot.py
+```
+
 To run the virtual assistant (command line), from your Terminal:
 ```
 python3 assistant.py
 ```
 
-## TonAI Research:
+## More from TonAI Research:
 * [TonAI Creative](https://github.com/tungedng2710/TonAI-Creative)
 * [TonAI Telegram Bot](https://github.com/tungedng2710/TonAI-Telegram)
