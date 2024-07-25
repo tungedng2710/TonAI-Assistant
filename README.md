@@ -1,6 +1,6 @@
-<div style="text-align: center;">
+<p align="center">
   <img src="stuffs/tonai_research_logo.png" alt="Description" style="width: 20%;">
-</div>
+</p>
 
 # TonAI-Assistant
 The virtual assistant is in the progress of development, you can try it with limited features
