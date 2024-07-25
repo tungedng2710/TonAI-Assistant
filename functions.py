@@ -1,11 +1,32 @@
+import os
 import torch
 from diffusers import StableDiffusionPipeline
+from utils.utils import save_image
+
+response_types = ["text", "image", "audio", "video"]
 
 
 def book_taxi(start_location: str = "",
               destination: str = ""):
-    print(
-        f"I haved booked a car from {start_location} to {destination}, wait for few minutes!")
+    """
+    Dummy function
+    """
+    message = f"I haved booked a car from {start_location} to {destination}"
+    message += "\nDriver will pick you soon"
+    print(message)
+    return message, response_types[0]
+
+
+def book_flight_ticket(start_location: str = "",
+                       destination: str = "",
+                       date_time: str = ""):
+    """
+    Dummy function
+    """
+    message = f"Your flight info: {start_location} to {destination}"
+    message += "\nDriver will pick you soon"
+    print(message)
+    return message, response_types[0]
 
 
 def generate_image(prompt: str = ""):
@@ -23,7 +44,9 @@ def generate_image(prompt: str = ""):
                          width=512,
                          height=512,
                          num_inference_steps=20,
-                         guidance_scale=7).images[0]
-        image.save("generated.png")
+                         guidance_scale=2).images[0]
+        image_path = save_image(image)
+        return image, image_path, response_types[1]
     except BaseException:
-        print("Server is overload")
+        message = "Server is overload, I can't draw picture now"
+        return message, response_types[0]

@@ -59,9 +59,9 @@ The virtual assistant is in the progress of development, you can try it with lim
 ## Run the Virtual Assistant
 To run the virtual assistant (command line), from your Terminal:
 ```
-python3 va.py
+python3 assistant.py
 ```
 
 ## TonAI Research:
-* [TonAI Creative Studio](https://github.com/tungedng2710/TonAI-Creative)
+* [TonAI Creative](https://github.com/tungedng2710/TonAI-Creative)
 * [TonAI Telegram Bot](https://github.com/tungedng2710/TonAI-Telegram)

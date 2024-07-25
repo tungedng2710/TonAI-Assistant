@@ -1,3 +1,4 @@
+import os
 import re
 import json
 
@@ -51,6 +52,7 @@ SYSTEM_PROMPT = f"""You are the virtual assistant of TonAI with access to the fo
 <functioncall> {{ "name": "function_name", "arguments": {{ "arg_1": "value_1", "arg_1": "value_1", ... }} }} </functioncall>
 Edge cases you must handle:
 - If there are no functions that match the user request, you will respond politely that you cannot help.
+- For any parameters you don't understand clearly, please return None
 """
 
 
@@ -63,3 +65,22 @@ def get_function_info(answer: str = ""):
         return dictionary
     else:
         return
+
+
+def save_image(image, base_dir="stuffs", base_filename="generated.png"):
+    if not os.path.exists(base_dir):
+        os.makedirs(base_dir)
+    
+    base_path = os.path.join(base_dir, base_filename)
+    if not os.path.exists(base_path):
+        image.save(base_path)
+        return base_path
+    else:
+        base, ext = os.path.splitext(base_filename)
+        counter = 1
+        new_path = os.path.join(base_dir, f"{base}{counter}{ext}")
+        while os.path.exists(new_path):
+            counter += 1
+            new_path = os.path.join(base_dir, f"{base}{counter}{ext}")
+        image.save(new_path)
+        return new_path
