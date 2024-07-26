@@ -64,7 +64,7 @@ python3 telegrambot.py
 
 To run the virtual assistant (command line), from your Terminal:
 ```
-python3 assistant.py
+python3 assistant_cli.py
 ```
 
 ## More from TonAI Research:
