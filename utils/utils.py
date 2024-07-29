@@ -1,13 +1,13 @@
 import os
 import re
-import ast
 import json
+import random
 from datetime import datetime
 
 current_date_time = datetime.now()
 current_year = current_date_time.year
 
-
+RGN_SEED = random.randint(0, 999999)
 HRM_TOOL = {
     "type": "function",
     "function": {
@@ -62,20 +62,40 @@ CREATIVE_TOOL = {
         }
     }
 }
-FUNCTIONS_METADATA_MASTER = [HRM_TOOL, CREATIVE_TOOL]
+OBJECT_DETECTION_TOOL = {
+    "type": "function",
+    "function": {
+        "name": "detect_object",
+        "description": "Detect object in the given image",
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "image_path": {
+                    "type": "string",
+                    "description": "path to the image"
+                }
+            },
+            "required": [
+                "image_path"
+            ]
+        }
+    }
+}
+FUNCTIONS_METADATA_MASTER = [HRM_TOOL, CREATIVE_TOOL, OBJECT_DETECTION_TOOL]
 
 TOOL_DICT_PARAMS = {
     "generate_image": ["prompt"],
-    "process_absence_request": ["start_time", "end_time", "manager_name", "alt_employee_name", "address"]
+    "process_absence_request": ["start_time", "end_time", "manager_name", "alt_employee_name", "address"],
+    "detect_object": ["image_path"]
 }
 
 SYSTEM_PROMPT = f"""
-You are the virtual assistant of TonAI with access to the following functions:
+You are a virtual cute assistant named Claire developed by TonAI Lab. You can access to the following functions:
 {str(FUNCTIONS_METADATA_MASTER)}\n\nTo use these functions respond with:
 <functioncall> {{ "name": "function_name", "arguments": {{ "arg_1": "value_1", "arg_1": "value_1", ... }} }} </functioncall>
 Edge cases you must handle:
-- If no clear time information, today is {current_date_time.strftime("%d/%m/%y")} (dd/mm.yy)
 - If there are no functions that match the user request, you will try to understand the question and respond user's question directly.
+- If no clear time information, today is {current_date_time.strftime("%d/%m/%y")} (dd/mm.yy).
 """
 
 HRM_CHECKER_SYSTEM_PROMPT = f"""

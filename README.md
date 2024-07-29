@@ -57,9 +57,10 @@ The virtual assistant is in the progress of development, you can try it with lim
     ```
 
 ## Run your Virtual Assistant
+Create the json file ```utils/bot_info.json```. Refer the format of this [JSON_FILE](https://github.com/tungedng2710/TonAI-Assistant/blob/main/utils/bot_info_example.json)
 To run the Telegram bot from your Terminal:
 ```
-python3 telegrambot.py
+python3 main_bot.py
 ```
 
 To run the virtual assistant (command line), from your Terminal:

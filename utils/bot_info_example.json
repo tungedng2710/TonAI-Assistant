@@ -1,0 +1,18 @@
+{
+    "username": "john_doe_bot",
+    "name": "John Doe",
+    "token": "YOUR BOT TOKEN",
+    "assistants": 
+    {
+        "master": 
+        {
+            "model_id": "hiieu/Meta-Llama-3-8B-Instruct-function-calling-json-mode",
+            "quantization": false
+        },
+        "hrm": 
+        {
+            "model_id": "hiieu/Meta-Llama-3-8B-Instruct-function-calling-json-mode",
+            "quantization": true
+        }
+    }
+}

@@ -1,25 +1,48 @@
-import os
 import gc
 import random
 import torch
+from PIL import Image
 from datetime import datetime
+
 from diffusers import StableDiffusionPipeline
+from transformers import AutoProcessor, AutoModelForVision2Seq
 from utils.utils import *
 from utils.assistant import VirtualAssistant
 
 response_types = ["text", "image", "audio", "video"]
 
 
-def book_taxi(start_location: str = "",
-              destination: str = "",
-              **kwargs):
+def detect_object(image_path: str = "",**kwargs):
     """
-    Dummy function
+    Object detection using Vision Language Model
     """
-    message = f"I haved booked a car from {start_location} to {destination}"
-    message += "\nDriver will pick you soon"
-    print(message)
-    return message, response_types[0]
+    try:
+        image = Image.open(image_path)
+        model_id = "microsoft/kosmos-2-patch14-224"
+        model = AutoModelForVision2Seq.from_pretrained(model_id, device_map="auto")
+        processor = AutoProcessor.from_pretrained(model_id)
+        prompt = "<grounding>An image of"
+        inputs = processor(text=prompt, images=image, return_tensors="pt").to(model.device)
+        generated_ids = model.generate(
+            pixel_values=inputs["pixel_values"],
+            input_ids=inputs["input_ids"],
+            attention_mask=inputs["attention_mask"],
+            image_embeds=None,
+            image_embeds_position_mask=inputs["image_embeds_position_mask"],
+            use_cache=True,
+            max_new_tokens=128,
+        )
+        generated_text = processor.batch_decode(generated_ids, skip_special_tokens=True)[0]
+        processed_text, entities = processor.post_process_generation(generated_text)
+        del model
+        del processor
+        torch.cuda.empty_cache()
+        gc.collect()
+        os.remove(image_path)
+        return processed_text, response_types[0]
+    except:
+        message = "I can't find the image"
+        return message, response_types[0]
 
 
 def process_absence_request(start_time: str = "",
@@ -28,6 +51,9 @@ def process_absence_request(start_time: str = "",
                             manager_name: str = "",
                             alt_employee_name: str = "",
                             **kwargs):
+    """
+    Process absence request of employees
+    """
     current_date_time = datetime.now()
     current_year = current_date_time.year
 
@@ -45,7 +71,7 @@ def process_absence_request(start_time: str = "",
         'end time': 'end_time in dd/mm/yy',
         'manager name': 'name of manager',
         'alt employee name': alt_employee_name,
-        'address': provided address
+        'address': where you will be during absence
     }}
     """
     messages = [
@@ -65,7 +91,7 @@ def process_absence_request(start_time: str = "",
 
 
 def generate_image(prompt: str = "", **kwargs):
-    seed = random.randint(0, 999999)
+    seed = RGN_SEED
     device = torch.device(f"cuda:0")
     generator = torch.Generator(device).manual_seed(seed)
     if len(prompt) == 0:

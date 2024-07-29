@@ -36,7 +36,7 @@ class VirtualAssistant:
                 bnb_4bit_compute_dtype=torch.bfloat16
             )
             quantization_args = {
-                # "quantization_config": bnb_config,
+                "quantization_config": bnb_config,
                 "torch_dtype": torch.bfloat16
             }
         else:
@@ -78,5 +78,3 @@ class VirtualAssistant:
         del self.model
         del self.tokenizer
         torch.cuda.empty_cache()
-
-    
