@@ -1,7 +1,9 @@
 import os
 import re
+import cv2
 import json
 import random
+from PIL import Image
 from datetime import datetime
 
 current_date_time = datetime.now()
@@ -81,13 +83,17 @@ OBJECT_DETECTION_TOOL = {
         }
     }
 }
-FUNCTIONS_METADATA_MASTER = [HRM_TOOL, CREATIVE_TOOL, OBJECT_DETECTION_TOOL]
+FUNCTIONS_METADATA_MASTER = [HRM_TOOL, CREATIVE_TOOL]
 
 TOOL_DICT_PARAMS = {
     "generate_image": ["prompt"],
-    "process_absence_request": ["start_time", "end_time", "manager_name", "alt_employee_name", "address"],
-    "detect_object": ["image_path"]
-}
+    "process_absence_request": [
+        "start_time",
+        "end_time",
+        "manager_name",
+        "alt_employee_name",
+        "address"],
+    "detect_object": ["image_path"]}
 
 SYSTEM_PROMPT = f"""
 You are a virtual cute assistant named Claire developed by TonAI Lab. You can access to the following functions:
@@ -95,17 +101,26 @@ You are a virtual cute assistant named Claire developed by TonAI Lab. You can ac
 <functioncall> {{ "name": "function_name", "arguments": {{ "arg_1": "value_1", "arg_1": "value_1", ... }} }} </functioncall>
 Edge cases you must handle:
 - If there are no functions that match the user request, you will try to understand the question and respond user's question directly.
-- If no clear time information, today is {current_date_time.strftime("%d/%m/%y")} (dd/mm.yy).
+- If no clear time information, today is {current_date_time.strftime("%d/%m/%y")} (dd/mm.yy). 
+- Convert datetime to dd/mm/yyyy by yourself
 """
 
 HRM_CHECKER_SYSTEM_PROMPT = f"""
 You are the virtual assistant with access to the following functions: f{HRM_TOOL}\n
-The functions must have the following parameters: {str(TOOL_DICT_PARAMS["process_absence_request"])}\n
-Now is {current_date_time.strftime("%d/%m/%y")} (dd/mm/yy)
-Check the user input, if there are not enough required parameters, politely ask the user to provide more information.
-If user provided enough parameters, respond '<accepted>'
+The functions must have the following required parameters: {str(TOOL_DICT_PARAMS["process_absence_request"])}\n
+Current year is {current_year}.
+If you don't know current datetime, now is {current_date_time.strftime("%d/%m/%y")} (dd/mm/yyyy)
+If the user don't provid correct datetime format, convert it to (dd/mm/yyyy) by yourself
+Check the user input, if there are not enough information for required parameters, politely ask the user about missed information.
+If user provided enough information, respond "<accepted>" only
 """
 
+SD_CHECKER_SYSTEM_PROMPT = f"""
+The user want you using Stable Diffusion to generate image.
+You must ask the user confirm what did he/she told you to generate.
+If the user agree, return "<accepted>"
+If the user disagree, politely say that you can help them other tasks
+"""
 
 def get_function_info(answer: str = ""):
     match = re.search(r'<functioncall>(.*?)</functioncall>', answer)
@@ -149,7 +164,7 @@ def find_dict_in_string(input_string):
         return match.group(0)
     else:
         return ""
-    
+
 
 def remove_markdown_code_blocks(input_string):
     # Regular expression to match Markdown code blocks (triple backticks)
@@ -159,3 +174,45 @@ def remove_markdown_code_blocks(input_string):
     cleaned_string = re.sub(code_block_pattern, '', input_string)
 
     return cleaned_string.strip()
+
+
+def draw_bbox(image_path, bboxes, label):
+    # Load the image
+    image = cv2.imread(image_path)
+    height, width, _ = image.shape
+
+    # Convert relative bbox coordinates to absolute coordinates
+    for bbox in bboxes:
+        x_min = int(bbox[0] * width)
+        y_min = int(bbox[1] * height)
+        x_max = int(bbox[2] * width)
+        y_max = int(bbox[3] * height)
+        cv2.rectangle(image, (x_min, y_min), (x_max, y_max), (0, 0, 255), 2)
+
+        font = cv2.FONT_HERSHEY_SIMPLEX
+        font_scale = 0.5
+        font_thickness = 1
+        text_color = (0, 0, 255)  # Red color
+        background_color = (255, 255, 255)  # White color
+        label_size, _ = cv2.getTextSize(
+            label, font, font_scale, font_thickness)
+        label_x, label_y = x_min, y_min - 10
+
+        cv2.rectangle(
+            image,
+            (label_x,
+             label_y -
+             label_size[1]),
+            (label_x +
+             label_size[0],
+             label_y),
+            background_color,
+            cv2.FILLED)
+        # Put the label text on the image
+        cv2.putText(image, label, (label_x, label_y), font,
+                    font_scale, text_color, font_thickness)
+
+    cv2_image_rgb = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+    pil_image = Image.fromarray(cv2_image_rgb)
+
+    return pil_image

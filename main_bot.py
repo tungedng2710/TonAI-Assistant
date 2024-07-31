@@ -2,35 +2,21 @@ import os
 import telebot
 import warnings
 import json
+import torch
+import gc
 from io import BytesIO
 from utils.assistant import VirtualAssistant
 
 import utils.functions as functions
 from utils.functions import *
 from utils.utils import *
+from assistant_info import *
 
 warnings.filterwarnings('ignore')
 
-try:
-    with open("utils/bot_info.json") as f_in:
-        BOT_INFO = json.load(f_in)
-    BOT_USERNAME = BOT_INFO["username"]
-    BOT_TOKEN = BOT_INFO["token"]
-except BaseException:
-    print("You haven't provided Telegram bot info or your info is invalid")
-    exit()
 bot = telebot.TeleBot(BOT_TOKEN)
 USER_SESSIONS = {}
-model_id = "hiieu/Meta-Llama-3-8B-Instruct-function-calling-json-mode"
-assistant = VirtualAssistant(llm_model_id=model_id,
-                             llm_quantization=False,
-                             memory_length=10)
-assistant.system_prompt = SYSTEM_PROMPT
-INIT_MESSAGE = {"role": "system", "content": assistant.system_prompt}
-FUNCTIONS_TO_CONFIRM = {
-    "process_absence_request": HRM_CHECKER_SYSTEM_PROMPT,
-    "book_taxi": HRM_CHECKER_SYSTEM_PROMPT
-    }
+
 # ----------------------------------------------------------------------------------------------------------------------------- #
 # ----------------------------------------------------------------------------------------------------------------------------- #
 # ----------------------------------------------------------------------------------------------------------------------------- #
@@ -40,17 +26,23 @@ def verify_user_request(messages, function_name):
     """
     Verify and confirm information before calling function
     """
-    checker_assistant = VirtualAssistant(llm_model_id=model_id,
-                                         llm_quantization=True)
-    check_messages = messages
+    checker_assistant = assistant
+    check_messages = messages.copy()
     check_messages[0] = {
         "role": "system",
         "content": FUNCTIONS_TO_CONFIRM[function_name]
     }
+    check_messages.append({
+        "role": "user",
+        "content": "check the provided information, only ask user about missing parameters"
+    })
     check_result = checker_assistant.complete(check_messages)
-    checker_assistant.release_gpu_memory()
-    del checker_assistant
     return check_result
+
+
+@bot.message_handler(commands=['start'])
+def do_nothing(message):
+    pass
 
 
 @bot.message_handler(func=lambda message: message.chat.id not in USER_SESSIONS)
@@ -66,8 +58,8 @@ def init_session(message):
             f"Hi {message.from_user.first_name} 🤗, {BOT_INFO['name']} is here!")
 
 
-@bot.message_handler(content_types=['sticker', 'audio'])
-def refuse_reply(message):
+@bot.message_handler(content_types=['sticker'])
+def process_sticker(message):
     global USER_SESSIONS
     if message.chat.type == 'private':
         bot.reply_to(message, "I can't get it 🥺")
@@ -100,7 +92,7 @@ def terminate_session(message):
         bot.send_message(chat_id, "Goodbye 🥺")
         USER_SESSIONS[message.chat.id] = {
             "active": False,
-            "dialogue": []
+            "dialogue": [INIT_MESSAGE]
         }
         USER_SESSIONS.pop(message.chat.id, None)
     else:
@@ -119,7 +111,11 @@ def handle_active_bot(message):
     if message.chat.type == 'private':
         input_text = message.text
         USER_SESSIONS[chat_id]["dialogue"].append({"role": "user", "content": input_text})
-        answer = assistant.complete(USER_SESSIONS[chat_id]["dialogue"])
+        try:
+            answer = assistant.complete(USER_SESSIONS[chat_id]["dialogue"])
+        except:
+            print("---", USER_SESSIONS[chat_id]["dialogue"])
+            answer = "I'm too busy, you can take a rest"
         if "<functioncall>" in answer:
             function_info = get_function_info(answer)
             if function_info["name"] in FUNCTIONS_TO_CONFIRM.keys():
@@ -127,18 +123,21 @@ def handle_active_bot(message):
                                                    function_info["name"])
             else:
                 check_result = "<accepted>"
-            if "<accepted>" in check_result or "<functioncall>" in check_result:
+            if "<accepted>" in check_result \
+                    or "<functioncall>" in check_result \
+                    or "accepted" in check_result:
                 print("Request accepted, calling function...")
                 function_to_call = getattr(functions, function_info["name"])
                 result = function_to_call(**function_info["arguments"])
                 datatype = result[-1]
                 if datatype == "image":
-                    image, image_url = result[0], result[1]
+                    image, image_url, image_info = result[0], result[1], result[2]
                     bio = BytesIO()
                     bio.name = image_url
                     image.save(bio, 'PNG')
                     bio.seek(0)
                     bot.send_photo(message.chat.id, photo=bio)
+                    bot.send_message(chat_id, image_info)
                     os.remove(image_url)
                 else:
                     bot.send_message(chat_id, result[0])

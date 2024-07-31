@@ -1,3 +1,4 @@
+import time
 import torch
 import warnings
 from transformers import AutoTokenizer, AutoModelForCausalLM, BitsAndBytesConfig
@@ -11,16 +12,18 @@ class VirtualAssistant:
                  memory_length: int = 20,
                  llm_model_id: str = None,
                  llm_quantization: bool = False,
-                 llm_max_tokens: int = 512) -> None:
+                 llm_max_tokens: int = 512,
+                 llm_use_bitsandbytes: bool = False) -> None:
         self.system_prompt = ""
         self.memory_length = memory_length
-        self.init_llm(llm_model_id, llm_quantization)
+        self.init_llm(llm_model_id, llm_quantization, llm_use_bitsandbytes)
         self.llm_max_tokens = llm_max_tokens
 
     def init_llm(
             self,
             model_id: str = "",
-            quantization: bool = False):
+            quantization: bool = False,
+            use_bitsandbytes: bool = False):
         """
         Initialize Large Language Model
         Args:
@@ -28,19 +31,19 @@ class VirtualAssistant:
             - quantization (bool) : use quantized model
         """
         self.tokenizer = AutoTokenizer.from_pretrained(model_id)
+        quantization_args = {}
+        bnb_config = BitsAndBytesConfig(
+            load_in_4bit=True,
+            bnb_4bit_use_double_quant=True,
+            bnb_4bit_quant_type="nf4",
+            bnb_4bit_compute_dtype=torch.bfloat16
+        )
         if quantization:
-            bnb_config = BitsAndBytesConfig(
-                load_in_4bit=True,
-                bnb_4bit_use_double_quant=True,
-                bnb_4bit_quant_type="nf4",
-                bnb_4bit_compute_dtype=torch.bfloat16
-            )
-            quantization_args = {
-                "quantization_config": bnb_config,
-                "torch_dtype": torch.bfloat16
-            }
-        else:
-            quantization_args = {}
+            if use_bitsandbytes:
+                quantization_args["quantization_config"] = bnb_config
+            
+            quantization_args["torch_dtype"] = torch.bfloat16
+
         self.model = AutoModelForCausalLM.from_pretrained(
             model_id,
             device_map="auto",
@@ -51,6 +54,7 @@ class VirtualAssistant:
         Generate text with LLMs
         Args:
             - messages: list of messages with ChatML format
+                        [{'role': ..., 'content': ...}, {...}, ...]
         """
         input_ids = self.tokenizer.apply_chat_template(
             messages,
@@ -73,8 +77,11 @@ class VirtualAssistant:
         response = outputs[0][input_ids.shape[-1]:]
         del input_ids
         return self.tokenizer.decode(response, skip_special_tokens=True)
-    
+
     def release_gpu_memory(self):
-        del self.model
-        del self.tokenizer
+        self.model = None
+        self.tokenizer = None
         torch.cuda.empty_cache()
+        time.sleep(3)
+
+
