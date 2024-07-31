@@ -14,7 +14,6 @@ except BaseException:
     exit()
 FUNCTIONS_TO_CONFIRM = {
     "process_absence_request": HRM_CHECKER_SYSTEM_PROMPT,
-    "generate_image": SD_CHECKER_SYSTEM_PROMPT,
     "book_taxi": HRM_CHECKER_SYSTEM_PROMPT
     }
 

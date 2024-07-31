@@ -32,10 +32,11 @@ def verify_user_request(messages, function_name):
         "role": "system",
         "content": FUNCTIONS_TO_CONFIRM[function_name]
     }
-    check_messages.append({
-        "role": "user",
-        "content": "check the provided information, only ask user about missing parameters"
-    })
+    if function_name == "process_absence_request":
+        check_messages.append({
+            "role": "user",
+            "content": "check the provided information, only ask user about missing parameters"
+        })
     check_result = checker_assistant.complete(check_messages)
     return check_result
 

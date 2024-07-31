@@ -117,7 +117,7 @@ If user provided enough information, respond "<accepted>" only
 
 SD_CHECKER_SYSTEM_PROMPT = f"""
 The user want you using Stable Diffusion to generate image.
-You must ask the user confirm what did he/she told you to generate.
+You must ask the user to reconfirm what did he/she told you to generate.
 If the user agree, return "<accepted>"
 If the user disagree, politely say that you can help them other tasks
 """
