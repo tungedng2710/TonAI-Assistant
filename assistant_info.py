@@ -1,5 +1,5 @@
 import json
-from utils.assistant import VirtualAssistant
+from utils.assistant import VirtualAssistant, OLlama_Assistant
 
 from utils.functions import *
 from utils.utils import *
@@ -15,14 +15,17 @@ except BaseException:
 FUNCTIONS_TO_CONFIRM = {
     "process_absence_request": HRM_CHECKER_SYSTEM_PROMPT,
     "book_taxi": HRM_CHECKER_SYSTEM_PROMPT
-    }
+}
 
 master_bot_info = BOT_INFO["assistants"]["master"]
-assistant = VirtualAssistant(llm_model_id=master_bot_info["model_id"],
-                             llm_quantization=False,
-                             llm_use_bitsandbytes=False,
-                             llm_max_tokens=1024,
-                             memory_length=10)
+# assistant = VirtualAssistant(llm_model_id=master_bot_info["model_id"],
+#                              llm_quantization=False,
+#                              llm_use_bitsandbytes=False,
+#                              llm_max_tokens=1024,
+#                              memory_length=10)
+# assistant.system_prompt = SYSTEM_PROMPT
+
+assistant = OLlama_Assistant()
 assistant.system_prompt = SYSTEM_PROMPT
 
 # model_id = "meta-llama/Meta-Llama-3-8B-Instruct"

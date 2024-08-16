@@ -1,6 +1,7 @@
 import time
 import torch
 import warnings
+import ollama
 from transformers import AutoTokenizer, AutoModelForCausalLM, BitsAndBytesConfig
 
 # Suppress warnings
@@ -48,6 +49,15 @@ class VirtualAssistant:
             model_id,
             device_map="auto",
             **quantization_args)
+        
+    def init_vlm(self, model_id):
+        self.vlm_tokenizer = AutoTokenizer.from_pretrained(model_id, trust_remote_code=True)
+        self.vlm_model = AutoModelForCausalLM.from_pretrained(
+                model_id,
+                device_map="auto",
+                trust_remote_code=True,
+                fp32=True).eval()
+        
 
     def complete(self, messages):
         """
@@ -85,3 +95,11 @@ class VirtualAssistant:
         time.sleep(3)
 
 
+class OLlama_Assistant:
+    def __init__(self, memory_length=12):
+        self.system_prompt = ""
+        self.memory_length = memory_length
+
+    def complete(self, messages):
+        response = ollama.chat(model='llama3', messages=messages)
+        return response['message']['content']

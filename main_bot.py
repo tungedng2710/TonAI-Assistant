@@ -111,17 +111,18 @@ def handle_active_bot(message):
 
     if message.chat.type == 'private':
         input_text = message.text
-        USER_SESSIONS[chat_id]["dialogue"].append({"role": "user", "content": input_text})
+        USER_SESSIONS[chat_id]["dialogue"].append(
+            {"role": "user", "content": input_text})
         try:
             answer = assistant.complete(USER_SESSIONS[chat_id]["dialogue"])
-        except:
+        except BaseException:
             print("---", USER_SESSIONS[chat_id]["dialogue"])
             answer = "I'm too busy, you can take a rest"
         if "<functioncall>" in answer:
             function_info = get_function_info(answer)
             if function_info["name"] in FUNCTIONS_TO_CONFIRM.keys():
-                check_result = verify_user_request(USER_SESSIONS[chat_id]["dialogue"],
-                                                   function_info["name"])
+                check_result = verify_user_request(
+                    USER_SESSIONS[chat_id]["dialogue"], function_info["name"])
             else:
                 check_result = "<accepted>"
             if "<accepted>" in check_result \
@@ -147,7 +148,8 @@ def handle_active_bot(message):
                 bot.send_message(chat_id, check_result)
         else:
             bot.send_message(chat_id, answer)
-        USER_SESSIONS[chat_id]["dialogue"].append({"role": "assistant", "content": answer})
+        USER_SESSIONS[chat_id]["dialogue"].append(
+            {"role": "assistant", "content": answer})
 
 
 if __name__ == '__main__':

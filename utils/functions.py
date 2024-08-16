@@ -111,20 +111,21 @@ def generate_image(prompt: str = "", **kwargs):
     device = torch.device(f"cuda:0")
     generator = torch.Generator(device).manual_seed(seed)
     if len(prompt) == 0:
-        prompt = "A random image"
-    model_path = "../checkpoints/realisticVisionV60B1_v51HyperVAE.safetensors"
+        prompt = "A random cat"
+    model_path = "../checkpoints/dreamshaper_8.safetensors"
     try:
-        StableDiffusionPipeline.safety_checker = None
         pipeline = StableDiffusionPipeline.from_single_file(
-            model_path).to(device)
-        # pipeline.enable_sequential_cpu_offload()
+            model_path,
+            torch_dtype=torch.float16
+        ).to(device)
+        pipeline.safety_checker = None
         image = pipeline(prompt=prompt,
                          negative_prompt="ugly, blurred",
                          width=512,
                          height=512,
                          num_inference_steps=20,
                          generator=generator,
-                         guidance_scale=2).images[0]
+                         guidance_scale=7).images[0]
         image_path = save_image(image)
         del pipeline
         torch.cuda.empty_cache()
