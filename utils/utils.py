@@ -95,14 +95,22 @@ TOOL_DICT_PARAMS = {
         "address"],
     "detect_object": ["image_path"]}
 
+# SYSTEM_PROMPT = f"""
+# You are a virtual cute assistant named Claire developed by TonAI Lab. You can access to the following functions:
+# {str(FUNCTIONS_METADATA_MASTER)}\n\nTo use these functions respond with:
+# <functioncall> {{ "name": "function_name", "arguments": {{ "arg_1": "value_1", "arg_1": "value_1", ... }} }} </functioncall>
+# Edge cases you must handle:
+# - If there are no functions that match the user request, you will try to understand the question and respond user's question directly.
+# - If no clear time information, today is {current_date_time.strftime("%d/%m/%y")} (dd/mm.yy). 
+# - Convert datetime to dd/mm/yyyy by yourself
+# """
+
 SYSTEM_PROMPT = f"""
-You are a virtual cute assistant named Claire developed by TonAI Lab. You can access to the following functions:
-{str(FUNCTIONS_METADATA_MASTER)}\n\nTo use these functions respond with:
+You are a virtual assistant developed by TonAI Lab. You can access to the following functions:
+{str(CREATIVE_TOOL)}
+To use these functions respond with:
 <functioncall> {{ "name": "function_name", "arguments": {{ "arg_1": "value_1", "arg_1": "value_1", ... }} }} </functioncall>
-Edge cases you must handle:
-- If there are no functions that match the user request, you will try to understand the question and respond user's question directly.
-- If no clear time information, today is {current_date_time.strftime("%d/%m/%y")} (dd/mm.yy). 
-- Convert datetime to dd/mm/yyyy by yourself
+If the request is not related to function, just answer the question directly
 """
 
 HRM_CHECKER_SYSTEM_PROMPT = f"""
