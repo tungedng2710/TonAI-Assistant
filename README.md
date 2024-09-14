@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="stuffs/tonai_research_logo.png" alt="Description" style="width: 20%;">
+  <img src="stuffs/splash.png" alt="Description" style="width: 20%;">
 </p>
 
 # TonAI-Assistant

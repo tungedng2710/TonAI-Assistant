@@ -17,7 +17,7 @@ class VirtualAssistant:
                  llm_use_bitsandbytes: bool = False) -> None:
         self.system_prompt = ""
         self.memory_length = memory_length
-        self.init_llm(llm_model_id, llm_quantization, llm_use_bitsandbytes)
+        # self.init_llm(llm_model_id, llm_quantization, llm_use_bitsandbytes)
         self.llm_max_tokens = llm_max_tokens
 
     def init_llm(

@@ -56,8 +56,9 @@ def init_session(message):
     if message.chat.type == 'private':
         bot.send_message(
             message.chat.id,
-            f"Hi {message.from_user.first_name} 🤗, {BOT_INFO['name']} is here!")
-
+            f"Hi {message.from_user.first_name} 🤗, {BOT_INFO['name']} is here! ChatID {message.chat.id}")
+    else:
+        print(message.chat.id)
 
 @bot.message_handler(content_types=['sticker'])
 def process_sticker(message):
